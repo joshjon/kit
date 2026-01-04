@@ -67,7 +67,7 @@ type SQLiteRepositoryTxer[R any] struct {
 
 	// txer is the database connection responsible for beginning new transactions
 	// (usually *sql.DB).
-	txer SQLiteTxer //
+	txer SQLiteTxer
 
 	// txn is set only on an SQLiteRepositoryTxer copy when a transaction is
 	// in-flight. If non-nil, calls to BeginTxFunc/WithTx reuse the existing
