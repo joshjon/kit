@@ -11,8 +11,8 @@ type SubtypePtr[T any] = typeid.SubtypePtr[T]
 
 // New creates a new instance of the specified ID type. It panics if the ID
 // cannot be generated.
-func New[T ID, PI SubtypePtr[T]]() T {
-	return typeid.Must(typeid.New[T, PI]())
+func New[I ID, PI SubtypePtr[I]]() I {
+	return typeid.Must(typeid.New[I, PI]())
 }
 
 // Parse parses a string representation of an ID into the specified ID type.
