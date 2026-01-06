@@ -17,8 +17,8 @@ type Registerer interface {
 	Register(pathPrefix string, h server.Handler, middleware ...echo.MiddlewareFunc)
 }
 
-func RegisterAuthHandler(cfg OIDCProviderConfig, srv Registerer) {
-	srv.Register("/auth", auth.NewOIDCHandler(cfg.SessionName, "/auth", cfg.Redirects))
+func RegisterAuthHandler(cfg OIDCProviderConfig, srv Registerer, sessionName string) {
+	srv.Register("/auth", auth.NewOIDCHandler(sessionName, "/auth", cfg.Redirects))
 }
 
 func RegisterReverseProxyHandler(

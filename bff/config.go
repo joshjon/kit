@@ -22,18 +22,16 @@ func (c *RegisterConfig) Validation() *valgo.Validation {
 }
 
 type OIDCProviderConfig struct {
-	SessionName string                         `yaml:"sessionName" env:"SESSION_NAME"`
-	Endpoint    string                         `yaml:"endpoint" env:"ENDPOINT"`
-	AppID       string                         `yaml:"appId" env:"APP_ID"`
-	AppSecret   string                         `yaml:"appSecret" env:"APP_SECRET"`
-	Redirects   auth.OIDCHandlerRedirectConfig `yaml:"redirects" envPrefix:"REDIRECTS_"`
-	Audiences   []OIDCProviderAudienceScopes   `yaml:"audiences" envPrefix:"AUDIENCES_"`
+	Endpoint  string                         `yaml:"endpoint" env:"ENDPOINT"`
+	AppID     string                         `yaml:"appId" env:"APP_ID"`
+	AppSecret string                         `yaml:"appSecret" env:"APP_SECRET"`
+	Redirects auth.OIDCHandlerRedirectConfig `yaml:"redirects" envPrefix:"REDIRECTS_"`
+	Audiences []OIDCProviderAudienceScopes   `yaml:"audiences" envPrefix:"AUDIENCES_"`
 }
 
 func (c *OIDCProviderConfig) Validation() *valgo.Validation {
 	v := valgo.New()
 	v.Is(
-		valgo.String(c.SessionName, "sessionName").Not().Blank(),
 		valgo.String(c.Endpoint, "endpoint").Not().Blank(),
 		valgo.String(c.AppID, "appId").Not().Blank(),
 		valgo.String(c.AppSecret, "appSecret").Not().Blank(),
