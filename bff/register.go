@@ -5,10 +5,8 @@ import (
 
 	"github.com/gin-contrib/sessions"
 	"github.com/labstack/echo/v4"
-	"github.com/logto-io/go/v2/client"
 
 	"github.com/joshjon/kit/auth"
-	"github.com/joshjon/kit/logto"
 	"github.com/joshjon/kit/proxy"
 	"github.com/joshjon/kit/server"
 )
@@ -39,7 +37,7 @@ func RegisterReverseProxyHandler(
 	}
 
 	for _, pathPrefix := range pathPrefixes {
-		srv.Register(pathPrefix, proxy.NewReverseProxyHandler(client, downstreamURL), NewMiddlewares(cfg, sessionName, provInit, sessionStore)...)
+		srv.Register(pathPrefix, proxy.NewReverseProxyHandler(client, downstreamURL), NewMiddlewares(cfg.Audiences, sessionName, provInit, sessionStore)...)
 	}
 
 	return nil
