@@ -94,7 +94,7 @@ type options struct {
 
 // Server serves an API for managing NATS operators, accounts, and users.
 type Server struct {
-	hostPort  string
+	port      int
 	echo      *echo.Echo
 	tlsConfig *tlsConfig
 	logger    log.Logger
@@ -113,7 +113,7 @@ func NewServer(port int, opts ...Option) (*Server, error) {
 	}
 
 	srv := &Server{
-		hostPort:  fmt.Sprintf("0.0.0.0:%d", port),
+		port:      port,
 		echo:      echo.New(),
 		logger:    srvOpts.logger,
 		tlsConfig: srvOpts.tlsConfig,
@@ -161,7 +161,7 @@ func NewServer(port int, opts ...Option) (*Server, error) {
 // Start begins serving on the configured host and port.
 func (s *Server) Start() error {
 	if s.tlsConfig == nil {
-		err := s.echo.Start(s.hostPort)
+		err := s.echo.Start(fmt.Sprintf(":%d", s.port))
 		if errors.Is(err, http.ErrServerClosed) {
 			return nil
 		}
@@ -193,7 +193,7 @@ func (s *Server) Start() error {
 
 	s.echo.TLSServer.TLSConfig = tlsCfg
 
-	err = s.echo.StartTLS(s.hostPort, s.tlsConfig.cert, s.tlsConfig.key)
+	err = s.echo.StartTLS(fmt.Sprintf(":%d", s.port), s.tlsConfig.cert, s.tlsConfig.key)
 	if errors.Is(err, http.ErrServerClosed) {
 		return nil
 	}
@@ -203,11 +203,6 @@ func (s *Server) Start() error {
 // Stop gracefully shuts down the server.
 func (s *Server) Stop(ctx context.Context) error {
 	return s.echo.Shutdown(ctx)
-}
-
-// HostPort returns the host and port the server is running on.
-func (s *Server) HostPort() string {
-	return s.hostPort
 }
 
 func (s *Server) WaitHealthy(maxRetries int, interval time.Duration) error {
@@ -236,18 +231,21 @@ func (s *Server) WaitHealthy(maxRetries int, interval time.Duration) error {
 
 // Address returns the server address which clients can connect to.
 func (s *Server) Address() string {
+	hp := fmt.Sprintf("localhost:%d", s.port)
 	if s.tlsConfig == nil {
-		return "http://" + s.HostPort()
+		return "http://" + hp
 	}
-	return "https://" + s.HostPort()
+	return "https://" + hp
 }
 
-// WebsSocketAddress returns the server WebSocket address which clients can connect to.
+// WebsSocketAddress returns the server WebSocket address which clients can
+// connect to.
 func (s *Server) WebsSocketAddress() string {
+	hp := fmt.Sprintf("localhost:%d", s.port)
 	if s.tlsConfig == nil {
-		return "ws://" + s.HostPort()
+		return "ws://" + hp
 	}
-	return "wss://" + s.HostPort()
+	return "wss://" + hp
 }
 
 type Handler interface {

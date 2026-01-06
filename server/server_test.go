@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
-	"fmt"
 	"net/http"
 	"os"
 	"testing"
@@ -58,7 +57,7 @@ func TestServer_TLS(t *testing.T) {
 		},
 	}
 
-	url := fmt.Sprintf("https://%s/healthz", srv.HostPort())
+	url := srv.Address() + "/healthz"
 	httpRes, err := client.Get(url)
 	require.NoError(t, err)
 	defer httpRes.Body.Close()
@@ -86,7 +85,7 @@ func TestServer_mTLS(t *testing.T) {
 		},
 	}
 
-	url := fmt.Sprintf("https://%s/healthz", srv.HostPort())
+	url := srv.Address() + "/healthz"
 	httpRes, err := client.Get(url)
 	require.NoError(t, err)
 	defer httpRes.Body.Close()
