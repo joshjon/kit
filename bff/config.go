@@ -33,6 +33,7 @@ type OIDCProviderConfig struct {
 func (c *OIDCProviderConfig) Validation() *valgo.Validation {
 	v := valgo.New()
 	v.Is(
+		valgo.String(c.SessionName, "sessionName").Not().Blank(),
 		valgo.String(c.Endpoint, "endpoint").Not().Blank(),
 		valgo.String(c.AppID, "appId").Not().Blank(),
 		valgo.String(c.AppSecret, "appSecret").Not().Blank(),
