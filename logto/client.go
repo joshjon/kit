@@ -1,0 +1,35 @@
+package logto
+
+import (
+	"github.com/logto-io/go/v2/client"
+
+	"github.com/joshjon/kit/auth"
+)
+
+func OIDCProviderInitializer(cfg *client.LogtoConfig) auth.OIDCProviderInitializer {
+	return func(storage *auth.SessionStorage) auth.OIDCProvider {
+		return NewClient(cfg, storage)
+	}
+}
+
+var _ auth.OIDCProvider = (*Client)(nil)
+
+type Client struct {
+	*client.LogtoClient
+	cfg *client.LogtoConfig
+}
+
+func NewClient(cfg *client.LogtoConfig, storage *auth.SessionStorage) *Client {
+	return &Client{
+		LogtoClient: client.NewLogtoClient(cfg, storage),
+		cfg:         cfg,
+	}
+}
+
+func (c *Client) GetAccessToken(resource string) (auth.AccessToken, error) {
+	tkn, err := c.LogtoClient.GetAccessToken(resource)
+	if err != nil {
+		return auth.AccessToken{}, err
+	}
+	return auth.AccessToken(tkn), nil
+}

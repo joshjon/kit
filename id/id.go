@@ -4,6 +4,7 @@ import "go.jetify.com/typeid"
 
 type ID interface {
 	typeid.Subtype
+	comparable
 	IsZero() bool
 }
 
