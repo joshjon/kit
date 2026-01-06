@@ -8,7 +8,6 @@ import (
 	"github.com/logto-io/go/v2/client"
 
 	"github.com/joshjon/kit/auth"
-	"github.com/joshjon/kit/logto"
 	"github.com/joshjon/kit/proxy"
 	"github.com/joshjon/kit/server"
 )
@@ -25,7 +24,9 @@ func RegisterReverseProxyHandler(
 	cfg OIDCProviderConfig,
 	srv Registerer,
 	client *http.Client,
+	provInit auth.OIDCProviderInitializer,
 	sessionStore sessions.Store,
+	sessionName string,
 	downstreamURL string,
 	pathPrefixes ...string,
 ) error {
@@ -37,13 +38,18 @@ func RegisterReverseProxyHandler(
 	}
 
 	for _, pathPrefix := range pathPrefixes {
-		srv.Register(pathPrefix, proxy.NewReverseProxyHandler(client, downstreamURL), NewMiddlewares(cfg, sessionStore)...)
+		srv.Register(pathPrefix, proxy.NewReverseProxyHandler(client, downstreamURL), NewMiddlewares(cfg, sessionName, provInit, sessionStore)...)
 	}
 
 	return nil
 }
 
-func NewMiddlewares(oidcCfg OIDCProviderConfig, sessionStore sessions.Store) []echo.MiddlewareFunc {
+func NewMiddlewares(
+	oidcCfg OIDCProviderConfig,
+	sessionName string,
+	provInit auth.OIDCProviderInitializer,
+	sessionStore sessions.Store,
+) []echo.MiddlewareFunc {
 	ltCfg := &client.LogtoConfig{
 		Endpoint:  oidcCfg.Endpoint,
 		AppId:     oidcCfg.AppID,
@@ -58,13 +64,11 @@ func NewMiddlewares(oidcCfg OIDCProviderConfig, sessionStore sessions.Store) []e
 		audPaths[aud.Name] = aud.Path
 	}
 
-	logtoInit := logto.OIDCProviderInitializer(ltCfg)
-
 	return []echo.MiddlewareFunc{
 		auth.OIDCProviderMiddleware(auth.OIDCProviderConfig{
-			SessionName:     oidcCfg.SessionName,
+			SessionName:     sessionName,
 			SessionStore:    sessionStore,
-			OIDCInitializer: logtoInit,
+			OIDCInitializer: provInit,
 		}),
 		auth.BearerTokenMiddleware(audPaths, "/healthz", "/auth"),
 	}
