@@ -17,18 +17,27 @@ type Registerer interface {
 	Register(pathPrefix string, h server.Handler, middleware ...echo.MiddlewareFunc)
 }
 
-func Register(cfg RegisterConfig, srv Registerer, client *http.Client, sessionStore sessions.Store, pathPrefixes ...string) error {
-	proxyURLs := []string{cfg.DownstreamURL}
+func RegisterAuthHandler(cfg OIDCProviderConfig, srv Registerer) {
+	srv.Register("/auth", auth.NewOIDCHandler(cfg.SessionName, "/auth", cfg.Redirects))
+}
+
+func RegisterReverseProxyHandler(
+	cfg OIDCProviderConfig,
+	srv Registerer,
+	client *http.Client,
+	sessionStore sessions.Store,
+	downstreamURL string,
+	pathPrefixes ...string,
+) error {
+	proxyURLs := []string{downstreamURL}
 	for _, proxyURL := range proxyURLs {
 		if err := waitDownstreamHealthy(client, proxyURL); err != nil {
 			return err
 		}
 	}
 
-	srv.Register("/auth", auth.NewOIDCHandler(cfg.OIDCProvider.SessionName, "/auth", cfg.OIDCProvider.Redirects))
-
 	for _, pathPrefix := range pathPrefixes {
-		srv.Register(pathPrefix, proxy.NewReverseProxyHandler(client, cfg.DownstreamURL), NewMiddlewares(cfg.OIDCProvider, sessionStore)...)
+		srv.Register(pathPrefix, proxy.NewReverseProxyHandler(client, downstreamURL), NewMiddlewares(cfg, sessionStore)...)
 	}
 
 	return nil
