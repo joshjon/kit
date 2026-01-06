@@ -8,6 +8,7 @@ import (
 	"github.com/logto-io/go/v2/client"
 
 	"github.com/joshjon/kit/auth"
+	"github.com/joshjon/kit/logto"
 	"github.com/joshjon/kit/proxy"
 	"github.com/joshjon/kit/server"
 )
@@ -45,22 +46,13 @@ func RegisterReverseProxyHandler(
 }
 
 func NewMiddlewares(
-	oidcCfg OIDCProviderConfig,
+	audScopes []OIDCProviderAudienceScopes,
 	sessionName string,
 	provInit auth.OIDCProviderInitializer,
 	sessionStore sessions.Store,
 ) []echo.MiddlewareFunc {
-	ltCfg := &client.LogtoConfig{
-		Endpoint:  oidcCfg.Endpoint,
-		AppId:     oidcCfg.AppID,
-		AppSecret: oidcCfg.AppSecret,
-	}
-
 	audPaths := map[string]string{}
-
-	for _, aud := range oidcCfg.Audiences {
-		ltCfg.Resources = append(ltCfg.Resources, aud.Name)
-		ltCfg.Scopes = append(ltCfg.Scopes, aud.Scopes...)
+	for _, aud := range audScopes {
 		audPaths[aud.Name] = aud.Path
 	}
 
