@@ -15,38 +15,20 @@ type Registerer interface {
 	Register(pathPrefix string, h server.Handler, middleware ...echo.MiddlewareFunc)
 }
 
-func RegisterAuthHandler(cfg OIDCProviderConfig, srv Registerer, sessionName string) {
-	srv.Register("/auth", auth.NewOIDCHandler(sessionName, "/auth", cfg.Redirects))
+func RegisterAuthHandler(cfg OIDCProviderConfig, srv Registerer, sessionName string, middlwares ...echo.MiddlewareFunc) {
+	srv.Register("/auth", auth.NewOIDCHandler(sessionName, "/auth", cfg.Redirects), middlwares...)
 }
 
-func RegisterReverseProxyHandler(
-	cfg OIDCProviderConfig,
-	srv Registerer,
-	client *http.Client,
-	provInit auth.OIDCProviderInitializer,
-	sessionStore sessions.Store,
-	sessionName string,
-	downstreamURL string,
-	pathPrefixes ...string,
-) error {
-	proxyURLs := []string{downstreamURL}
-	for _, proxyURL := range proxyURLs {
-		if err := waitDownstreamHealthy(client, proxyURL); err != nil {
-			return err
-		}
-	}
-
+func RegisterReverseProxyHandler(srv Registerer, client *http.Client, downstreamURL string, pathPrefixes []string, middlewares ...echo.MiddlewareFunc) {
 	for _, pathPrefix := range pathPrefixes {
-		srv.Register(pathPrefix, proxy.NewReverseProxyHandler(client, downstreamURL), NewMiddlewares(cfg.Audiences, sessionName, provInit, sessionStore)...)
+		srv.Register(pathPrefix, proxy.NewReverseProxyHandler(client, downstreamURL), middlewares...)
 	}
-
-	return nil
 }
 
-func NewMiddlewares(
+func NewMiddleware(
 	audScopes []OIDCProviderAudienceScopes,
-	sessionName string,
 	provInit auth.OIDCProviderInitializer,
+	sessionName string,
 	sessionStore sessions.Store,
 ) []echo.MiddlewareFunc {
 	audPaths := map[string]string{}

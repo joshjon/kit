@@ -43,7 +43,10 @@ func (h *OIDCHandler) Register(g *echo.Group) {
 }
 
 func (h *OIDCHandler) Login(c echo.Context) error {
-	p := GetOIDCProvider(c)
+	p, err := GetOIDCProvider(c)
+	if err != nil {
+		return err
+	}
 	signInURI, err := p.SignInWithRedirectUri(h.redirects.BaseAuthServerURI + h.pathPrefix + "/callback")
 	if err != nil {
 		return err
@@ -52,16 +55,21 @@ func (h *OIDCHandler) Login(c echo.Context) error {
 }
 
 func (h *OIDCHandler) LoginCallback(c echo.Context) error {
-	p := GetOIDCProvider(c)
-	err := p.HandleSignInCallback(c.Request())
+	p, err := GetOIDCProvider(c)
 	if err != nil {
+		return err
+	}
+	if err = p.HandleSignInCallback(c.Request()); err != nil {
 		return err
 	}
 	return c.Redirect(http.StatusTemporaryRedirect, h.redirects.HomeURI)
 }
 
 func (h *OIDCHandler) Logout(c echo.Context) error {
-	p := GetOIDCProvider(c)
+	p, err := GetOIDCProvider(c)
+	if err != nil {
+		return err
+	}
 	signOutUri, signOutErr := p.SignOut(h.redirects.HomeURI)
 	if signOutErr != nil {
 		return c.String(http.StatusOK, signOutErr.Error())

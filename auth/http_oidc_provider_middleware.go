@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/cohesivestack/valgo"
@@ -62,14 +63,14 @@ func OIDCProviderMiddleware(cfg OIDCProviderConfig) echo.MiddlewareFunc {
 	}
 }
 
-func GetOIDCProvider(c echo.Context) OIDCProvider {
+func GetOIDCProvider(c echo.Context) (OIDCProvider, error) {
 	v := c.Get(oidcProviderContextKey)
 	if v == nil {
-		panic("oidc provider not found")
+		return nil, errors.New("oidc provider not found")
 	}
 	p, ok := v.(OIDCProvider)
 	if !ok {
-		panic("found an invalid oidc provider value")
+		return nil, errors.New("found an invalid oidc provider value")
 	}
-	return p
+	return p, nil
 }

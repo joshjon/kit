@@ -27,7 +27,10 @@ func BearerTokenMiddleware(audPaths map[string]string, skipPathPrefixes ...strin
 				}
 			}
 
-			p := GetOIDCProvider(c)
+			p, err := GetOIDCProvider(c)
+			if err != nil {
+				return err
+			}
 			tkn, err := p.GetAccessToken(resource)
 			if err != nil {
 				return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")

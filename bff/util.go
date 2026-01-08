@@ -56,32 +56,6 @@ func createHTTPClient(tlsCfg *httpTLSConfig) (*http.Client, error) {
 	return client, nil
 }
 
-func waitDownstreamHealthy(client *http.Client, addr string) error {
-	healthzURL := fmt.Sprintf("%s/healthz", addr)
-	maxRetries := 15
-	interval := time.Second
-
-	var res *http.Response
-	var err error
-
-	for i := 0; i < maxRetries; i++ {
-		res, err = client.Get(healthzURL)
-		if err == nil && res.StatusCode == http.StatusOK {
-			return nil
-		}
-
-		time.Sleep(interval)
-	}
-
-	if err != nil {
-		return fmt.Errorf("downstream unhealthy: %w", err)
-	} else if res != nil {
-		return fmt.Errorf("downstream unhealthy: %s", http.StatusText(res.StatusCode))
-	}
-
-	return errors.New("downstream unhealthy")
-}
-
 func serve(ctx context.Context, srv *server.Server, logger log.Logger) error {
 	errs := make(chan error)
 
