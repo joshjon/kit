@@ -2,6 +2,7 @@ package valgoutil
 
 import (
 	"encoding/hex"
+	"fmt"
 	"net"
 	"net/url"
 
@@ -38,6 +39,18 @@ func HexAESKeyValidator(hexKey string, nameAndTitle ...string) valgo.Validator {
 	return valgo.String(hexKey, nameAndTitle...).Passing(func(s string) bool {
 		return isValidHexAESKey(s)
 	}, "must be a hex-encoded key that decodes to 16, 24, or 32 bytes (AES-128/192/256)")
+}
+
+// HexBytesLen validates a hex-encoded string that decodes to a specific number
+// of bytes.
+func HexBytesLen(hexKey string, numBytes int, nameAndTitle ...string) valgo.Validator {
+	return valgo.String(hexKey, nameAndTitle...).Passing(func(s string) bool {
+		b, err := hex.DecodeString(s)
+		if err != nil {
+			return false
+		}
+		return len(b) == numBytes
+	}, fmt.Sprintf("must be a hex-encoded string that decodes to %d bytes", numBytes))
 }
 
 func isValidHostPort(hostPort string) bool {
