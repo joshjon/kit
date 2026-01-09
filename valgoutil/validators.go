@@ -1,6 +1,7 @@
 package valgoutil
 
 import (
+	"encoding/hex"
 	"net"
 	"net/url"
 
@@ -31,6 +32,14 @@ func NonEmptySliceValidator[T any](items []T, nameAndTitle ...string) valgo.Vali
 	}, "{{title}} must not be empty")
 }
 
+// HexAESKeyValidator validates a hex-encoded AES key.
+// The value must be a valid hex and decode to 16, 24, or 32 bytes.
+func HexAESKeyValidator(hexKey string, nameAndTitle ...string) valgo.Validator {
+	return valgo.String(hexKey, nameAndTitle...).Passing(func(s string) bool {
+		return isValidHexAESKey(s)
+	}, "must be a hex-encoded key that decodes to 16, 24, or 32 bytes (AES-128/192/256)")
+}
+
 func isValidHostPort(hostPort string) bool {
 	_, _, err := net.SplitHostPort(hostPort)
 	return err == nil
@@ -49,4 +58,17 @@ func isValidURL(rawURL string) bool {
 	}
 
 	return parsedURL.Host != ""
+}
+
+func isValidHexAESKey(s string) bool {
+	b, err := hex.DecodeString(s)
+	if err != nil {
+		return false
+	}
+	switch len(b) {
+	case 16, 24, 32:
+		return true
+	default:
+		return false
+	}
 }
