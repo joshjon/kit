@@ -12,12 +12,14 @@ import (
 
 type OIDCHandlerRedirectConfig struct {
 	BaseAuthServerURI     string `yaml:"baseAuthServerURI" env:"BASE_AUTH_SERVER_URI"`
+	PostLoginRedirectURI  string `yaml:"postLoginRedirectURI" env:"POST_LOGIN_REDIRECT_URI"`
 	PostLogoutRedirectURI string `yaml:"postLogoutRedirectURI" env:"POST_LOGOUT_REDIRECT_URI"`
 }
 
 func (c *OIDCHandlerRedirectConfig) Validation() *valgo.Validation {
 	return valgo.Is(
 		valgoutil.URLValidator(c.BaseAuthServerURI, "baseAuthServerURI"),
+		valgoutil.URLValidator(c.PostLoginRedirectURI, "postLoginRedirectURI"),
 		valgoutil.URLValidator(c.PostLogoutRedirectURI, "postLogoutRedirectURI"),
 	)
 }
@@ -62,7 +64,7 @@ func (h *OIDCHandler) LoginCallback(c echo.Context) error {
 	if err = p.HandleSignInCallback(c.Request()); err != nil {
 		return err
 	}
-	return c.Redirect(http.StatusTemporaryRedirect, h.redirects.PostLogoutRedirectURI)
+	return c.Redirect(http.StatusTemporaryRedirect, h.redirects.PostLoginRedirectURI)
 }
 
 func (h *OIDCHandler) Logout(c echo.Context) error {
