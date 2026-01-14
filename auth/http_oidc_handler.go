@@ -11,14 +11,14 @@ import (
 )
 
 type OIDCHandlerRedirectConfig struct {
-	BaseAuthServerURI string `yaml:"baseAuthServerURI" env:"BASE_AUTH_SERVER_URI"`
-	HomeURI           string `yaml:"homeURI" env:"HOME_URI"`
+	BaseAuthServerURI     string `yaml:"baseAuthServerURI" env:"BASE_AUTH_SERVER_URI"`
+	PostLogoutRedirectURI string `yaml:"postLogoutRedirectURI" env:"POST_LOGOUT_REDIRECT_URI"`
 }
 
 func (c *OIDCHandlerRedirectConfig) Validation() *valgo.Validation {
 	return valgo.Is(
 		valgoutil.URLValidator(c.BaseAuthServerURI, "baseAuthServerURI"),
-		valgoutil.URLValidator(c.HomeURI, "homeURI"),
+		valgoutil.URLValidator(c.PostLogoutRedirectURI, "postLogoutRedirectURI"),
 	)
 }
 
@@ -62,7 +62,7 @@ func (h *OIDCHandler) LoginCallback(c echo.Context) error {
 	if err = p.HandleSignInCallback(c.Request()); err != nil {
 		return err
 	}
-	return c.Redirect(http.StatusTemporaryRedirect, h.redirects.HomeURI)
+	return c.Redirect(http.StatusTemporaryRedirect, h.redirects.PostLogoutRedirectURI)
 }
 
 func (h *OIDCHandler) Logout(c echo.Context) error {
@@ -70,7 +70,7 @@ func (h *OIDCHandler) Logout(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	signOutUri, signOutErr := p.SignOut(h.redirects.HomeURI)
+	signOutUri, signOutErr := p.SignOut(h.redirects.PostLogoutRedirectURI)
 	if signOutErr != nil {
 		return c.String(http.StatusOK, signOutErr.Error())
 	}
