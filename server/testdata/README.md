@@ -23,7 +23,7 @@
     
     # Sign the server CSR with the CA certificate to create the server certificate
     openssl x509 -req -in server.csr -CA ca-cert.pem -CAkey ca-key.pem -CAcreateserial \
-      -out server-cert.pem -days 365 -sha256 \
+      -out server-cert.pem -days 3650 -sha256 \
       -extfile <(printf "subjectAltName=DNS:localhost,IP:127.0.0.1,IP:::1,IP:0.0.0.0\nextendedKeyUsage=serverAuth")
     ```
 
@@ -39,6 +39,6 @@
     
     # Sign the client CSR with the CA certificate to create the client certificate
     openssl x509 -req -in client.csr -CA ca-cert.pem -CAkey ca-key.pem -CAcreateserial \
-      -out client-cert.pem -days 365 -sha256 \
+      -out client-cert.pem -days 3650 -sha256 \
       -extfile <(printf "extendedKeyUsage=clientAuth")
     ```
