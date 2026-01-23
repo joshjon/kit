@@ -25,3 +25,7 @@ func (codeConflict) Code() int { return http.StatusConflict }
 type forbidden struct{}
 
 func (forbidden) Code() int { return http.StatusForbidden }
+
+type gatewayTimeout struct{}
+
+func (gatewayTimeout) Code() int { return http.StatusGatewayTimeout }
