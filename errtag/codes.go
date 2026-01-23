@@ -29,3 +29,7 @@ func (forbidden) Code() int { return http.StatusForbidden }
 type gatewayTimeout struct{}
 
 func (gatewayTimeout) Code() int { return http.StatusGatewayTimeout }
+
+type badGateway struct{}
+
+func (badGateway) Code() int { return http.StatusBadGateway }

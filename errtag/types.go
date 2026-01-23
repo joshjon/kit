@@ -13,3 +13,5 @@ type Conflict struct{ ErrorTag[codeConflict] }
 type Forbidden struct{ ErrorTag[forbidden] }
 
 type GatewayTimeout struct{ ErrorTag[gatewayTimeout] }
+
+type BadGateway struct{ ErrorTag[badGateway] }
