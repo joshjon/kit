@@ -19,6 +19,12 @@ func BearerTokenMiddleware(audPaths map[string]string, skipPathPrefixes ...strin
 				}
 			}
 
+			// If Authorization header is already present skip session-based
+			// token retrieval and pass through
+			if c.Request().Header.Get("Authorization") != "" {
+				return next(c)
+			}
+
 			var resource string
 			for aud, path := range audPaths {
 				if strings.HasPrefix(reqPath, path) {
