@@ -27,9 +27,12 @@ func NewClient(cfg *client.LogtoConfig, storage *auth.SessionStorage) *Client {
 }
 
 func (c *Client) GetAccessToken(resource string) (auth.AccessToken, error) {
+	// Debug: Check if token is in session before calling Logto SDK
+	// The Logto SDK should be checking session storage internally, but let's verify
 	tkn, err := c.LogtoClient.GetAccessToken(resource)
 	if err != nil {
 		return auth.AccessToken{}, err
 	}
+	// TODO: Add logging to see if this is fetching from cache or making network call
 	return auth.AccessToken(tkn), nil
 }

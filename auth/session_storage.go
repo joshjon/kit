@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"fmt"
+
 	"github.com/gin-contrib/sessions"
 )
 
@@ -9,10 +11,23 @@ type SessionStorage struct {
 	errHandler func(err error)
 }
 
-func NewSessionStorage(session sessions.Session) *SessionStorage {
-	return &SessionStorage{
+type SessionStorageOption func(*SessionStorage)
+
+// WithErrHandler sets a custom error handler.
+func WithErrHandler(handler func(err error)) SessionStorageOption {
+	return func(s *SessionStorage) {
+		s.errHandler = handler
+	}
+}
+
+func NewSessionStorage(session sessions.Session, opts ...SessionStorageOption) *SessionStorage {
+	s := &SessionStorage{
 		session: session,
 	}
+	for _, opt := range opts {
+		opt(s)
+	}
+	return s
 }
 
 func (s *SessionStorage) GetItem(key string) string {
@@ -23,9 +38,11 @@ func (s *SessionStorage) GetItem(key string) string {
 	return value.(string)
 }
 
-func (s *SessionStorage) SetItem(key, value string) {
+func (s *SessionStorage) SetItem(key string, value string) {
 	s.session.Set(key, value)
-	if err := s.session.Save(); err != nil && s.errHandler != nil {
-		s.errHandler(err)
+	if err := s.session.Save(); err != nil {
+		if s.errHandler != nil {
+			s.errHandler(fmt.Errorf("token not cached: session save error: %w", err))
+		}
 	}
 }

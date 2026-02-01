@@ -52,11 +52,11 @@ type OIDCProviderConfig struct {
 	OIDCInitializer OIDCProviderInitializer
 }
 
-func OIDCProviderMiddleware(cfg OIDCProviderConfig) echo.MiddlewareFunc {
+func OIDCProviderMiddleware(cfg OIDCProviderConfig, opts ...SessionStorageOption) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			s := &session{cfg.SessionName, c.Request(), cfg.SessionStore, nil, false, c.Response().Writer}
-			p := cfg.OIDCInitializer(NewSessionStorage(s))
+			p := cfg.OIDCInitializer(NewSessionStorage(s, opts...))
 			c.Set(oidcProviderContextKey, p)
 			return next(c)
 		}
