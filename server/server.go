@@ -38,10 +38,12 @@ func WithRequestLogKeys(keys ...string) Option {
 	}
 }
 
-// WithRequestTimeout sets the timeout for request handlers.
-func WithRequestTimeout(timeout time.Duration) Option {
+// WithRequestTimeout sets the timeout for request handlers. Optional
+// skipPaths exempt matching route paths from the timeout.
+func WithRequestTimeout(timeout time.Duration, skipPaths ...string) Option {
 	return func(opts *options) error {
 		opts.timeout = &timeout
+		opts.timeoutSkipPaths = skipPaths
 		return nil
 	}
 }
@@ -84,12 +86,13 @@ func WithTLS(certFile string, keyFile string, caCertFile string) Option {
 }
 
 type options struct {
-	logger      log.Logger
-	reqLogKeys  []string
-	timeout     *time.Duration
-	corsOrigins []string
-	middlewares []echo.MiddlewareFunc
-	tlsConfig   *tlsConfig // nil to disable
+	logger           log.Logger
+	reqLogKeys       []string
+	timeout          *time.Duration
+	timeoutSkipPaths []string
+	corsOrigins      []string
+	middlewares      []echo.MiddlewareFunc
+	tlsConfig        *tlsConfig // nil to disable
 }
 
 // Server serves an API for managing NATS operators, accounts, and users.
@@ -141,7 +144,15 @@ func NewServer(port int, opts ...Option) (*Server, error) {
 	timeoutCfg := middleware.TimeoutConfig{
 		Timeout: DefaultRequestTimeout,
 		Skipper: func(c echo.Context) bool {
-			return c.IsWebSocket()
+			if c.IsWebSocket() {
+				return true
+			}
+			for _, p := range srvOpts.timeoutSkipPaths {
+				if c.Path() == p {
+					return true
+				}
+			}
+			return false
 		},
 	}
 	if srvOpts.timeout != nil {
