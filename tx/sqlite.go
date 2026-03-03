@@ -7,11 +7,21 @@ import (
 	"fmt"
 	"time"
 
-	"modernc.org/sqlite"
-	lib "modernc.org/sqlite/lib"
-
 	"github.com/joshjon/kit/errtag"
 )
+
+// SQLite error codes used for timeout detection. These are standard SQLite
+// codes that are the same across all drivers (modernc.org/sqlite, libsql, etc).
+const (
+	sqliteBusy   = 5 // SQLITE_BUSY
+	sqliteLocked = 6 // SQLITE_LOCKED
+)
+
+// sqliteErrorCoder matches any SQLite driver error that exposes an integer
+// error code (e.g. modernc.org/sqlite.Error, libsql errors).
+type sqliteErrorCoder interface {
+	Code() int
+}
 
 // SQLiteTxer starts SQLite transactions (typically *sql.DB).
 type SQLiteTxer interface {
@@ -45,8 +55,8 @@ type SQLiteRepositoryTxerConfig[R any] struct {
 	WithTxFunc func(repo R, txer *SQLiteRepositoryTxer[R], tx *sql.Tx) R
 }
 
-// SQLiteRepositoryTxer adds transactional behavior to any SQLite repository
-// type R, where the underlying database driver uses modernc.org/sqlite.
+// SQLiteRepositoryTxer adds transactional behavior to any SQLite-compatible
+// repository type R (works with modernc.org/sqlite, libsql, and other drivers).
 //
 // It is typically stored on the repository (often as a pointer) and used to:
 //  1. Start a transaction and return a repository *copy* bound to that tx.
@@ -160,10 +170,10 @@ func TagSQLiteTimeoutErr(err error) error {
 	if errors.Is(err, context.DeadlineExceeded) {
 		return errtag.Tag[ErrTagTransactionTimeout](err)
 	}
-	var se *sqlite.Error
+	var se sqliteErrorCoder
 	if errors.As(err, &se) {
 		switch se.Code() {
-		case lib.SQLITE_BUSY, lib.SQLITE_LOCKED:
+		case sqliteBusy, sqliteLocked:
 			return errtag.Tag[ErrTagTransactionTimeout](err)
 		}
 	}

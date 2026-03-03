@@ -41,16 +41,43 @@ func WithInMemory() OpenOption {
 	}
 }
 
+// WithDSN configures the connection to use the given driver name and DSN
+// directly. This bypasses the default file/in-memory DSN construction and
+// skips PRAGMA setup (foreign_keys, WAL, busy_timeout).
+//
+// The caller is responsible for importing the appropriate database/sql driver
+// when this option is used.
+func WithDSN(driverName, dsn string) OpenOption {
+	return func(opts *openOpts) {
+		opts.driverName = driverName
+		opts.dsn = dsn
+	}
+}
+
 type openOpts struct {
-	dir      string
-	dbName   string
-	inMemory bool
+	dir        string
+	dbName     string
+	inMemory   bool
+	driverName string
+	dsn        string
 }
 
 func Open(ctx context.Context, opts ...OpenOption) (*sql.DB, error) {
 	var o openOpts
 	for _, opt := range opts {
 		opt(&o)
+	}
+
+	// Custom DSN: open directly and skip PRAGMA setup.
+	if o.dsn != "" {
+		db, err := sql.Open(o.driverName, o.dsn)
+		if err != nil {
+			return nil, err
+		}
+		if err = waitHealthy(ctx, db); err != nil {
+			return nil, err
+		}
+		return db, nil
 	}
 
 	var dsn string
