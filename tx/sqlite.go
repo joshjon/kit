@@ -36,8 +36,14 @@ type SQLiteRepositoryTxerConfig[R any] struct {
 	//
 	// Timeout is applied by:
 	//   - Running the transaction under a context deadline.
-	//   - Setting PRAGMA busy_timeout to the same duration (lock wait cap).
+	//   - Setting PRAGMA busy_timeout to the same duration (unless NoPragma
+	//     is true).
 	Timeout time.Duration
+
+	// NoPragma disables PRAGMA statements (e.g. busy_timeout) inside
+	// transactions. Set this to true when using a SQLite driver or backend
+	// that does not support PRAGMAs.
+	NoPragma bool
 
 	// WithTxFunc returns a tx-bound copy of the repo using the provided
 	// transaction. If the SQLiteRepositoryTxer already represents an in-flight
@@ -142,7 +148,7 @@ func (r *SQLiteRepositoryTxer[R]) BeginTxFunc(
 		return TagSQLiteTimeoutErr(err)
 	}
 
-	if r.Config.Timeout > 0 {
+	if r.Config.Timeout > 0 && !r.Config.NoPragma {
 		ms := int64(r.Config.Timeout / time.Millisecond)
 		if _, err = sqlTx.ExecContext(ctx, fmt.Sprintf("PRAGMA busy_timeout=%d", ms)); err != nil {
 			return TagSQLiteTimeoutErr(err)
