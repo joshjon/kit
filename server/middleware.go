@@ -20,8 +20,8 @@ import (
 // RequestLoggerConfigFunc configures request logging middleware on a Server.
 type RequestLoggerConfigFunc func(logger log.Logger) middleware.RequestLoggerConfig
 
-func newRequestLoggerConfig(logger log.Logger, keys ...string) middleware.RequestLoggerConfig {
-	return middleware.RequestLoggerConfig{
+func newRequestLoggerConfig(logger log.Logger, skipper middleware.Skipper, keys ...string) middleware.RequestLoggerConfig {
+	cfg := middleware.RequestLoggerConfig{
 		LogValuesFunc:    logValuesFunc(logger, keys...),
 		LogLatency:       true,
 		LogRemoteIP:      true,
@@ -32,6 +32,10 @@ func newRequestLoggerConfig(logger log.Logger, keys ...string) middleware.Reques
 		LogContentLength: true,
 		LogResponseSize:  true,
 	}
+	if skipper != nil {
+		cfg.Skipper = skipper
+	}
+	return cfg
 }
 
 func logValuesFunc(logger log.Logger, keys ...string) func(c echo.Context, v middleware.RequestLoggerValues) error {

@@ -38,6 +38,16 @@ func WithRequestLogKeys(keys ...string) Option {
 	}
 }
 
+// WithRequestLogSkipper sets a function that determines whether to skip request
+// logging for a given request. When the skipper returns true, the request will
+// not be logged.
+func WithRequestLogSkipper(skipper middleware.Skipper) Option {
+	return func(opts *options) error {
+		opts.reqLogSkipper = skipper
+		return nil
+	}
+}
+
 // WithRequestTimeout sets the timeout for request handlers. Optional
 // skipPaths exempt matching route paths from the timeout.
 func WithRequestTimeout(timeout time.Duration, skipPaths ...string) Option {
@@ -88,6 +98,7 @@ func WithTLS(certFile string, keyFile string, caCertFile string) Option {
 type options struct {
 	logger           log.Logger
 	reqLogKeys       []string
+	reqLogSkipper    middleware.Skipper
 	timeout          *time.Duration
 	timeoutSkipPaths []string
 	corsOrigins      []string
@@ -126,7 +137,7 @@ func NewServer(port int, opts ...Option) (*Server, error) {
 	srv.echo.HidePort = true
 	srv.echo.Pre(middleware.RemoveTrailingSlash())
 	srv.echo.Use(middleware.Recover())
-	srv.echo.Use(middleware.RequestLoggerWithConfig(newRequestLoggerConfig(srv.logger, srvOpts.reqLogKeys...)))
+	srv.echo.Use(middleware.RequestLoggerWithConfig(newRequestLoggerConfig(srv.logger, srvOpts.reqLogSkipper, srvOpts.reqLogKeys...)))
 	srv.echo.Use(errorTransformMiddleware)
 	srv.echo.HTTPErrorHandler = httpErrorHandlerFunc(srv.logger)
 	if len(srvOpts.corsOrigins) > 0 {
