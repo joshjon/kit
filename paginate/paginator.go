@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	MaxPageSize          = int32(500)
-	DefaultPageSize      = MaxPageSize
+	MaxPageSize          = int32(5000)
+	DefaultPageSize      = 500
 	PageSizeQueryParam   = "page_size"
 	PageCursorQueryParam = "page_cursor"
 )
