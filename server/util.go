@@ -28,6 +28,9 @@ func SetResponse[T any](c echo.Context, code int, data T) error {
 }
 
 func SetResponseList[T any](c echo.Context, code int, data []T, nextCursor string) error {
+	if data == nil {
+		data = []T{}
+	}
 	res := &ResponseList[T]{
 		Data: data,
 	}
